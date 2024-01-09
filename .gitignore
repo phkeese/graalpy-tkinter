@@ -253,3 +253,7 @@ pyrightconfig.json
 
 # Generated C files
 _tkinter/tklib_cffi.c
+
+# All virtual environments
+.venv*
+
