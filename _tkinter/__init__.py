@@ -26,7 +26,6 @@ DONT_WAIT = tklib.TCL_DONT_WAIT
 def create(screenName=None, baseName=None, className=None,
            interactive=False, wantobjects=False, wantTk=True,
            sync=False, use=None):
-    print("Creating app!")
     return TkApp(screenName, baseName, className,
                  interactive, wantobjects, wantTk, sync, use)
 
@@ -52,4 +51,4 @@ def _flatten(item):
     return tuple(result)
 
 
-tklib.Tcl_FindExecutable(bytes(sys.executable, "UTF-8"))
+tklib.Tcl_FindExecutable(sys.executable)

@@ -243,6 +243,6 @@ libraries=linklibs,
 library_dirs = libdirs
 )
 
-
 if __name__ == "__main__":
     tkffi.compile(os.path.join(os.path.dirname(sys.argv[0]), '..'))
+    

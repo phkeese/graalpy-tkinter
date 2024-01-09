@@ -5,16 +5,16 @@ import binascii
 
 class TypeCache(object):
     def __init__(self):
-        self.OldBooleanType = tklib.Tcl_GetObjType(bytes("boolean", "UTF-8"))
+        self.OldBooleanType = tklib.Tcl_GetObjType("boolean")
         self.BooleanType = None
-        self.ByteArrayType = tklib.Tcl_GetObjType(bytes("bytearray", "UTF-8"))
-        self.DoubleType = tklib.Tcl_GetObjType(bytes("double", "UTF-8"))
-        self.IntType = tklib.Tcl_GetObjType(bytes("int", "UTF-8"))
-        self.WideIntType = tklib.Tcl_GetObjType(bytes("wideInt", "UTF-8"))
+        self.ByteArrayType = tklib.Tcl_GetObjType("bytearray")
+        self.DoubleType = tklib.Tcl_GetObjType("double")
+        self.IntType = tklib.Tcl_GetObjType("int")
+        self.WideIntType = tklib.Tcl_GetObjType("wideInt")
         self.BigNumType = None
-        self.ListType = tklib.Tcl_GetObjType(bytes("list", "UTF-8"))
-        self.ProcBodyType = tklib.Tcl_GetObjType(bytes("procbody", "UTF-8"))
-        self.StringType = tklib.Tcl_GetObjType(bytes("string", "UTF-8"))
+        self.ListType = tklib.Tcl_GetObjType("list")
+        self.ProcBodyType = tklib.Tcl_GetObjType("procbody")
+        self.StringType = tklib.Tcl_GetObjType("string")
 
     def add_extra_types(self, app):
         # Some types are not registered in Tcl.
@@ -138,7 +138,7 @@ def FromObj(app, value):
 
 def AsObj(value):
     if isinstance(value, str):
-        return tklib.Tcl_NewStringObj(bytes(value, "UTF-8"), len(value))
+        return tklib.Tcl_NewStringObj(value, len(value))
     if isinstance(value, bool):
         return tklib.Tcl_NewBooleanObj(value)
     if isinstance(value, int):
@@ -151,26 +151,23 @@ def AsObj(value):
             else:
                 import sys
                 t, v, tb = sys.exc_info()
-                # TODO: Remove RuntimeError(), this fails originally
-                # raise t, v, tb
-                raise RuntimeError(t, v, tb)
-    # TODO: Comment back in
-    # if isinstance(value, long):
-    #     try:
-    #         tkffi.new("long[]", [value])
-    #     except OverflowError:
-    #         pass 
-    #     else:
-    #         return tklib.Tcl_NewLongObj(value)
-    #     if tklib.HAVE_WIDE_INT_TYPE:
-    #         try:
-    #             tkffi.new("Tcl_WideInt[]", [value])
-    #         except OverflowError:
-    #             pass
-    #         else:
-    #             return tklib.Tcl_NewWideIntObj(value)
-    #     if tklib.HAVE_LIBTOMMATH:
-    #         return AsBignumObj(value)
+                raise t, v, tb
+    if isinstance(value, long):
+        try:
+            tkffi.new("long[]", [value])
+        except OverflowError:
+            pass 
+        else:
+            return tklib.Tcl_NewLongObj(value)
+        if tklib.HAVE_WIDE_INT_TYPE:
+            try:
+                tkffi.new("Tcl_WideInt[]", [value])
+            except OverflowError:
+                pass
+            else:
+                return tklib.Tcl_NewWideIntObj(value)
+        if tklib.HAVE_LIBTOMMATH:
+            return AsBignumObj(value)
             
     if isinstance(value, float):
         return tklib.Tcl_NewDoubleObj(value)
@@ -179,7 +176,7 @@ def AsObj(value):
         for i in range(len(value)):
             argv[i] = AsObj(value[i])
         return tklib.Tcl_NewListObj(len(value), argv)
-    if isinstance(value, str):
+    if isinstance(value, unicode):
         encoded = value.encode('utf-16')[2:]
         buf = tkffi.new("char[]", encoded)
         inbuf = tkffi.cast("Tcl_UniChar*", buf)
@@ -230,4 +227,4 @@ class TclObject(object):
                 value = value.decode('utf8')
             self._string = value
         return self._string
-        
+    

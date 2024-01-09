@@ -26,7 +26,7 @@ class _DummyLock(object):
 def varname_converter(input):
     if isinstance(input, TclObject):
         return input.string
-    if b'\0' in bytes(input, "UTF-8"):
+    if b'\0' in input:
         raise ValueError("NUL character in string")
     return input
 
@@ -52,7 +52,7 @@ def Tcl_AppInit(app):
     if tklib.Tcl_Init(app.interp) == tklib.TCL_ERROR:
         app.raiseTclError()
     skip_tk_init = tklib.Tcl_GetVar(
-        app.interp, b"_tkinter_skip_tk_init", tklib.TCL_GLOBAL_ONLY)
+        app.interp, "_tkinter_skip_tk_init", tklib.TCL_GLOBAL_ONLY)
     if skip_tk_init and tkffi.string(skip_tk_init) == "1":
         return
 
@@ -105,7 +105,7 @@ class TkApp(object):
         self.interp = tklib.Tcl_CreateInterp()
         self._wantobjects = wantobjects
         self.threaded = bool(tklib.Tcl_GetVar2Ex(
-            self.interp, bytes("tcl_platform", "UTF-8"), bytes("threaded", "UTF-8"),
+            self.interp, "tcl_platform", "threaded",
             tklib.TCL_GLOBAL_ONLY))
         self.thread_id = tklib.Tcl_GetCurrentThread()
         self.dispatching = False
@@ -122,26 +122,26 @@ class TkApp(object):
         self._commands = {}
 
         # Delete the 'exit' command, which can screw things up
-        tklib.Tcl_DeleteCommand(self.interp, b"exit")
+        tklib.Tcl_DeleteCommand(self.interp, "exit")
 
         if screenName is not None:
-            tklib.Tcl_SetVar2(self.interp, b"env", b"DISPLAY", screenName,
+            tklib.Tcl_SetVar2(self.interp, "env", "DISPLAY", screenName,
                               tklib.TCL_GLOBAL_ONLY)
 
         if interactive:
-            tklib.Tcl_SetVar(self.interp, b"tcl_interactive", b"1",
+            tklib.Tcl_SetVar(self.interp, "tcl_interactive", "1",
                              tklib.TCL_GLOBAL_ONLY)
         else:
-            tklib.Tcl_SetVar(self.interp, b"tcl_interactive", b"0",
+            tklib.Tcl_SetVar(self.interp, "tcl_interactive", "0",
                              tklib.TCL_GLOBAL_ONLY)
 
         # This is used to get the application class for Tk 4.1 and up
         argv0 = className.lower().encode('ascii')
-        tklib.Tcl_SetVar(self.interp, b"argv0", argv0,
+        tklib.Tcl_SetVar(self.interp, "argv0", argv0,
                          tklib.TCL_GLOBAL_ONLY)
 
         if not wantTk:
-            tklib.Tcl_SetVar(self.interp, b"_tkinter_skip_tk_init", "1",
+            tklib.Tcl_SetVar(self.interp, "_tkinter_skip_tk_init", "1",
                              tklib.TCL_GLOBAL_ONLY)
 
         # some initial arguments need to be in argv
@@ -169,9 +169,7 @@ class TkApp(object):
     def raiseTclError(self):
         if self.errorInCmd:
             self.errorInCmd = False
-            # TODO: Remove RuntimeError(), this fails originally
-            # raise self.exc_info[0], self.exc_info[1], self.exc_info[2]
-            raise RuntimeError(self.exc_info[0], self.exc_info[1], self.exc_info[2])
+            raise self.exc_info[0], self.exc_info[1], self.exc_info[2]
         raise TclError(tkffi.string(tklib.Tcl_GetStringResult(self.interp)))
 
     def wantobjects(self):
@@ -218,8 +216,7 @@ class TkApp(object):
         if global_only:
             flags |= tklib.TCL_GLOBAL_ONLY
         with self._tcl_lock:
-            res = tklib.Tcl_GetVar2Ex(self.interp, bytes(name1,"UTF-8"), name2, flags)
-            print(f"{name1}={res} with type {type(res)}")
+            res = tklib.Tcl_GetVar2Ex(self.interp, name1, name2, flags)
             if not res:
                 self.raiseTclError()
             assert self._wantobjects
@@ -284,7 +281,7 @@ class TkApp(object):
 
         with self._tcl_lock:
             res = tklib.Tcl_CreateCommand(
-                self.interp, bytes(cmdName, "UTF-8"), _CommandData.PythonCmd,
+                self.interp, cmdName, _CommandData.PythonCmd,
                 clientData, _CommandData.PythonCmdDelete)
         if not res:
             raise TclError("can't create Tcl command")
@@ -568,9 +565,7 @@ class TkApp(object):
         self.quitMainLoop = False
         if self.errorInCmd:
             self.errorInCmd = False
-            # TODO: Remove RuntimeError(), this fails originally
-            # raise self.exc_info[0], self.exc_info[1], self.exc_info[2]
-            raise RuntimeError(self.exc_info[0], self.exc_info[1], self.exc_info[2])
+            raise self.exc_info[0], self.exc_info[1], self.exc_info[2]
 
     def quit(self):
         self.quitMainLoop = True
