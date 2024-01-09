@@ -151,8 +151,8 @@ def AsObj(value):
             else:
                 import sys
                 t, v, tb = sys.exc_info()
-                raise t, v, tb
-    if isinstance(value, long):
+                raise t(v).with_traceback(tb)
+    if isinstance(value, int):
         try:
             tkffi.new("long[]", [value])
         except OverflowError:
@@ -176,7 +176,7 @@ def AsObj(value):
         for i in range(len(value)):
             argv[i] = AsObj(value[i])
         return tklib.Tcl_NewListObj(len(value), argv)
-    if isinstance(value, unicode):
+    if isinstance(value, str):
         encoded = value.encode('utf-16')[2:]
         buf = tkffi.new("char[]", encoded)
         inbuf = tkffi.cast("Tcl_UniChar*", buf)

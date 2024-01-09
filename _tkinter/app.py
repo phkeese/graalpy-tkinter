@@ -169,7 +169,7 @@ class TkApp(object):
     def raiseTclError(self):
         if self.errorInCmd:
             self.errorInCmd = False
-            raise self.exc_info[0], self.exc_info[1], self.exc_info[2]
+            raise self.exc_info[0](self.exc_info[1]).with_traceback(self.exc_info[2])
         raise TclError(tkffi.string(tklib.Tcl_GetStringResult(self.interp)))
 
     def wantobjects(self):
@@ -374,7 +374,7 @@ class TkApp(object):
             return tuple(result)
         elif isinstance(arg, tuple):
             return self._splitObj(arg)
-        elif isinstance(arg, unicode):
+        elif isinstance(arg, str):
             arg = arg.encode('utf8')
         return self._split(arg)
 
@@ -391,7 +391,7 @@ class TkApp(object):
             return tuple(result)
         elif isinstance(arg, tuple):
             return arg
-        elif isinstance(arg, unicode):
+        elif isinstance(arg, str):
             arg = arg.encode('utf8')
 
         argc = tkffi.new("int*")
@@ -424,10 +424,10 @@ class TkApp(object):
                 result[i] = newelem
             if result is not None:
                 return tuple(result)
-        elif isinstance(arg, basestring):
+        elif isinstance(arg, str):
             argc = tkffi.new("int*")
             argv = tkffi.new("char***")
-            if isinstance(arg, unicode):
+            if isinstance(arg, str):
                 arg = arg.encode('utf-8')
             list_ = str(arg)
             res = tklib.Tcl_SplitList(tkffi.NULL, list_, argc, argv)
@@ -460,9 +460,9 @@ class TkApp(object):
             tklib.Tcl_Free(argv[0])
 
     def getboolean(self, s):
-        if isinstance(s, (int, long)):
+        if isinstance(s, int):
             return bool(s)
-        if isinstance(s, unicode):
+        if isinstance(s, str):
             s = str(s)
         if '\x00' in s:
             raise TypeError
@@ -473,9 +473,9 @@ class TkApp(object):
         return bool(v[0])
 
     def getint(self, s):
-        if isinstance(s, (int, long)):
+        if isinstance(s, int):
             return s
-        if isinstance(s, unicode):
+        if isinstance(s, str):
             s = str(s)
         if '\x00' in s:
             raise TypeError
@@ -500,7 +500,7 @@ class TkApp(object):
     def getdouble(self, s):
         if isinstance(s, float):
             return s
-        if isinstance(s, unicode):
+        if isinstance(s, str):
             s = str(s)
         if '\x00' in s:
             raise TypeError
@@ -565,7 +565,7 @@ class TkApp(object):
         self.quitMainLoop = False
         if self.errorInCmd:
             self.errorInCmd = False
-            raise self.exc_info[0], self.exc_info[1], self.exc_info[2]
+            raise self.exc_info[0](self.exc_info[1]).with_traceback(self.exc_info[2])
 
     def quit(self):
         self.quitMainLoop = True
