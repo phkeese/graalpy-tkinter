@@ -45,14 +45,14 @@ def Tcl_AppInit(app):
         tcl_path = join(lib_path, 'tcl')
         tk_path = join(lib_path, 'tk')
     if exists(tcl_path):
-        tklib.Tcl_Eval(app.interp, 'set tcl_library "{0}"'.format(tcl_path).encode('utf-8'))
+        tklib.Tcl_Eval(app.interp, b'set tcl_library "{0}"'.format(tcl_path).encode('utf-8'))
     if exists(tk_path):    
-        tklib.Tcl_Eval(app.interp, 'set tk_library "{0}"'.format(tk_path).encode('utf-8'))
+        tklib.Tcl_Eval(app.interp, b'set tk_library "{0}"'.format(tk_path).encode('utf-8'))
 
     if tklib.Tcl_Init(app.interp) == tklib.TCL_ERROR:
         app.raiseTclError()
     skip_tk_init = tklib.Tcl_GetVar(
-        app.interp, "_tkinter_skip_tk_init", tklib.TCL_GLOBAL_ONLY)
+        app.interp, b"_tkinter_skip_tk_init", tklib.TCL_GLOBAL_ONLY)
     if skip_tk_init and tkffi.string(skip_tk_init) == "1":
         return
 
@@ -67,7 +67,7 @@ class _CommandData(object):
         self.func = func
         handle = tkffi.new_handle(self)
         app._commands[name] = handle  # To keep the command alive
-        return tkffi.cast("ClientData", handle)
+        return tkffi.cast(b"ClientData", handle)
 
     @tkffi.callback("Tcl_CmdProc")
     def PythonCmd(clientData, interp, argc, argv):
@@ -105,7 +105,7 @@ class TkApp(object):
         self.interp = tklib.Tcl_CreateInterp()
         self._wantobjects = wantobjects
         self.threaded = bool(tklib.Tcl_GetVar2Ex(
-            self.interp, "tcl_platform", "threaded",
+            self.interp, b"tcl_platform", b"threaded",
             tklib.TCL_GLOBAL_ONLY))
         self.thread_id = tklib.Tcl_GetCurrentThread()
         self.dispatching = False
@@ -122,39 +122,39 @@ class TkApp(object):
         self._commands = {}
 
         # Delete the 'exit' command, which can screw things up
-        tklib.Tcl_DeleteCommand(self.interp, "exit")
+        tklib.Tcl_DeleteCommand(self.interp, b"exit")
 
         if screenName is not None:
-            tklib.Tcl_SetVar2(self.interp, "env", "DISPLAY", screenName,
+            tklib.Tcl_SetVar2(self.interp, b"env", b"DISPLAY", screenName,
                               tklib.TCL_GLOBAL_ONLY)
 
         if interactive:
-            tklib.Tcl_SetVar(self.interp, "tcl_interactive", "1",
+            tklib.Tcl_SetVar(self.interp, b"tcl_interactive", b"1",
                              tklib.TCL_GLOBAL_ONLY)
         else:
-            tklib.Tcl_SetVar(self.interp, "tcl_interactive", "0",
+            tklib.Tcl_SetVar(self.interp, b"tcl_interactive", b"0",
                              tklib.TCL_GLOBAL_ONLY)
 
         # This is used to get the application class for Tk 4.1 and up
         argv0 = className.lower().encode('ascii')
-        tklib.Tcl_SetVar(self.interp, "argv0", argv0,
+        tklib.Tcl_SetVar(self.interp, b"argv0", argv0,
                          tklib.TCL_GLOBAL_ONLY)
 
         if not wantTk:
-            tklib.Tcl_SetVar(self.interp, "_tkinter_skip_tk_init", "1",
+            tklib.Tcl_SetVar(self.interp, b"_tkinter_skip_tk_init", b"1",
                              tklib.TCL_GLOBAL_ONLY)
 
         # some initial arguments need to be in argv
         if sync or use:
-            args = ""
+            args = b""
             if sync:
-                args += "-sync"
+                args += b"-sync"
             if use:
                 if sync:
-                    args += " "
-                args += "-use " + use
+                    args += b" "
+                args += b"-use " + use
 
-            tklib.Tcl_SetVar(self.interp, "argv", args,
+            tklib.Tcl_SetVar(self.interp, b"argv", args,
                              tklib.TCL_GLOBAL_ONLY)
 
         Tcl_AppInit(self)
@@ -188,11 +188,11 @@ class TkApp(object):
 
     def loadtk(self):
         # We want to guard against calling Tk_Init() multiple times
-        err = tklib.Tcl_Eval(self.interp, "info exists     tk_version")
+        err = tklib.Tcl_Eval(self.interp, b"info exists     tk_version")
         if err == tklib.TCL_ERROR:
             self.raiseTclError()
         tk_exists = tklib.Tcl_GetStringResult(self.interp)
-        if not tk_exists or tkffi.string(tk_exists) != "1":
+        if not tk_exists or tkffi.string(tk_exists) != b"1":
             err = tklib.Tk_Init(self.interp)
             if err == tklib.TCL_ERROR:
                 self.raiseTclError()
@@ -284,7 +284,7 @@ class TkApp(object):
                 self.interp, cmdName, _CommandData.PythonCmd,
                 clientData, _CommandData.PythonCmdDelete)
         if not res:
-            raise TclError("can't create Tcl command")
+            raise TclError(b"can't create Tcl command")
 
     def deletecommand(self, cmdName):
         if self.threaded and self.thread_id != tklib.Tcl_GetCurrentThread():
@@ -307,6 +307,7 @@ class TkApp(object):
             # marshal the parameters to the interpreter thread.
             raise NotImplementedError("Call from another thread")
 
+        # Allocate new array of object pointers.
         objects = tkffi.new("Tcl_Obj*[]", len(args))
         argc = len(args)
         try:
@@ -450,7 +451,7 @@ class TkApp(object):
 
         try:
             if argc[0] == 0:
-                return ""
+                return b""
             elif argc[0] == 1:
                 return tkffi.string(argv[0][0])
             else:

@@ -50,5 +50,5 @@ def _flatten(item):
     _flatten1(result, item, 0)
     return tuple(result)
 
-
-tklib.Tcl_FindExecutable(sys.executable)
+# Encoding is not specified explicitly, but "must be passed argv[0]" sounds like a simple conversion to raw bytes.
+tklib.Tcl_FindExecutable(sys.executable.encode("utf-8"))
