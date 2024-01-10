@@ -14,9 +14,10 @@ from .tklib_cffi import ffi as tkffi, lib as tklib
 
 from .app import TkApp
 from .tclobj import TclObject as Tcl_Obj
+from .app import FromTclString, ToTCLString
 
-TK_VERSION = tkffi.string(tklib.get_tk_version())
-TCL_VERSION = tkffi.string(tklib.get_tcl_version())
+TK_VERSION = FromTclString(tkffi.string(tklib.get_tk_version()))
+TCL_VERSION = FromTclString(tkffi.string(tklib.get_tcl_version()))
 
 READABLE = tklib.TCL_READABLE
 WRITABLE = tklib.TCL_WRITABLE
@@ -51,4 +52,4 @@ def _flatten(item):
     return tuple(result)
 
 # Encoding is not specified explicitly, but "must be passed argv[0]" sounds like a simple conversion to raw bytes.
-tklib.Tcl_FindExecutable(sys.executable.encode("utf-8"))
+tklib.Tcl_FindExecutable(ToTCLString(sys.executable))

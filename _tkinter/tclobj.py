@@ -20,30 +20,29 @@ class TypeCache(object):
         # Some types are not registered in Tcl.
         result = app.call('expr', 'true')
         typePtr = AsObj(result).typePtr
-        if tkffi.string(typePtr.name) == "booleanString":
+        if FromTclString(tkffi.string(typePtr.name)) == "booleanString":
             self.BooleanType = typePtr
 
         result = app.call('expr', '2**63')
         typePtr = AsObj(result).typePtr
-        if tkffi.string(typePtr.name) == "bignum":
+        if FromTclString(tkffi.string(typePtr.name)) == "bignum":
             self.BigNumType = typePtr
 
 
-def FromTclString(s):
-    # If the result contains any bytes with the top bit set, it's
-    # UTF-8 and we should decode it to Unicode.
+# Interprets a TCL string (untyped char array) as a Python str using UTF-8.
+# This assumes that TCL encodes its return values as UTF-8, not UTF-16.
+# TODO: Find out whether this assumption is correct.
+def FromTclString(s: bytes) -> str:
     try:
-        s.decode('ascii')
+        return s.decode("utf-8")
     except UnicodeDecodeError:
-        try:
-            return s.decode('utf8')
-        except UnicodeDecodeError:
-            # Tcl encodes null character as \xc0\x80
-            try:
-                return s.replace('\xc0\x80', '\x00').decode('utf-8')
-            except UnicodeDecodeError:
-                pass
-    return s
+        # Tcl encodes null character as \xc0\x80
+        s.replace('\xc0\x80', '\x00').decode('utf-8')
+
+# Encodes a Python str as UTF-8 (assuming TCL encodes its API strings as UTF-8 as well, not UTF-16).
+# TODO: Find out whether this is correct.
+def ToTCLString(s: str) -> bytes:
+    return s.encode("utf-8")
 
 
 # Only when tklib.HAVE_WIDE_INT_TYPE.
@@ -140,7 +139,7 @@ def AsObj(value):
     if isinstance(value, str):
         # TCL uses UTF-16 internally (https://www.tcl.tk/man/tcl8.4/TclCmd/encoding.html)
         # But this function takes UTF-8 (https://linux.die.net/man/3/tcl_newstringobj#:~:text=array%20of%20UTF%2D8%2Dencoded%20bytes)
-        return tklib.Tcl_NewStringObj(value.encode("utf-8"), len(value))
+        return tklib.Tcl_NewStringObj(ToTCLString(value), len(value))
     if isinstance(value, bool):
         return tklib.Tcl_NewBooleanObj(value)
     if isinstance(value, int):
@@ -179,6 +178,9 @@ def AsObj(value):
             argv[i] = AsObj(value[i])
         return tklib.Tcl_NewListObj(len(value), argv)
     if isinstance(value, str):
+        # TODO: Remnant of Python2's unicode type. What happens when our string contains unicode characters?
+        # Should we encode it as UTF-8 or UTF-16?
+        raise NotImplementedError
         encoded = value.encode('utf-16')[2:]
         buf = tkffi.new("char[]", encoded)
         inbuf = tkffi.cast("Tcl_UniChar*", buf)
@@ -202,7 +204,7 @@ class TclObject(object):
     def __str__(self):
         if self._string and isinstance(self._string, str):
             return self._string
-        return tkffi.string(tklib.Tcl_GetString(self._value))
+        return FromTclString(tkffi.string(tklib.Tcl_GetString(self._value)))
 
     def __repr__(self):
         return "<%s object at 0x%x>" % (
@@ -215,12 +217,12 @@ class TclObject(object):
 
     @property
     def typename(self):
-        return tkffi.string(self._value.typePtr.name)
+        return FromTclString(tkffi.string(self._value.typePtr.name))
 
     @property
     def string(self):
         if self._string is None:
-            length = tkffi.new(b"int*")
+            length = tkffi.new("int*")
             s = tklib.Tcl_GetStringFromObj(self._value, length)
             value = tkffi.buffer(s, length[0])[:]
             try:
