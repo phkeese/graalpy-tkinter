@@ -1,6 +1,11 @@
 ## Setup
 
 ```bash
+# Update submodules in this directory
+git submodule update --init
+```
+
+```bash
 # Inside GraalPy root directory
 mx build
 mx python -m venv <path/to/venv>
