@@ -20,11 +20,11 @@ elif sys.platform == 'win32':
 elif sys.platform == 'darwin':
     # homebrew
     homebrew = os.environ.get('HOMEBREW_PREFIX', '')
-    incdirs = ['/usr/local/opt/tcl-tk/include']
+    incdirs = ['/usr/local/opt/tcl-tk/include/tcl-tk']
     linklibs = ['tcl8.6', 'tk8.6']
     libdirs = []
     if homebrew:
-        incdirs.append(homebrew + '/include')
+        incdirs.append(homebrew + '/include/tcl-tk')
         libdirs.append(homebrew + '/opt/tcl-tk/lib')
 else:
     # On some Linux distributions, the tcl and tk libraries are
