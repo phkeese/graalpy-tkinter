@@ -19,6 +19,11 @@ python _tkinter/tklib_build.py
 python main.py
 ```
 
+```bash
+# build your own mini tcl/tk app in c
+cc -o c_tests/raw c_tests/raw_tcl.c -l tcl8.6 -L /usr/local/Cellar/tcl-tk/8.6.13_5/lib/ -ltk8.6
+```
+
 ## TODO
 - [ ] Remove hack in tkinter for str
 - [ ] Rewrite marshalling code
