@@ -24,10 +24,15 @@ class _DummyLock(object):
 
 
 def varname_converter(input):
+    # Explicit handling of NUL character in strings a bytes here because tests require it.
+    if isinstance(input, bytes) and b'\0' in input:
+        raise ValueError("NUL character in string")
+    if isinstance(input, str) and '\0' in input:
+        raise ValueError("NUL character in string")
+
     if isinstance(input, TclObject):
         return input.string
-    if b'\0' in input:
-        raise ValueError("NUL character in string")
+
     return ToTCLString(input)
 
 
