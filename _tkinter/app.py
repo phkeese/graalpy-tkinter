@@ -28,7 +28,7 @@ def varname_converter(input):
         return input.string
     if '\0' in input:
         raise ValueError("NUL character in string")
-    return input
+    return ToTCLString(input)
 
 
 def Tcl_AppInit(app):
@@ -170,7 +170,7 @@ class TkApp(object):
         if self.errorInCmd:
             self.errorInCmd = False
             raise self.exc_info[0](self.exc_info[1]).with_traceback(self.exc_info[2])
-        raise TclError(tkffi.string(tklib.Tcl_GetStringResult(self.interp)))
+        raise TclError(FromTclString(tkffi.string(tklib.Tcl_GetStringResult(self.interp))))
 
     def wantobjects(self):
         return self._wantobjects
@@ -217,7 +217,7 @@ class TkApp(object):
             flags |= tklib.TCL_GLOBAL_ONLY
         with self._tcl_lock:
             # Name encoding not explicitly statet, assuming UTF-8 here due to other APIs.
-            res = tklib.Tcl_GetVar2Ex(self.interp, ToTCLString(name1), name2, flags)
+            res = tklib.Tcl_GetVar2Ex(self.interp, name1, name2, flags)
             if not res:
                 self.raiseTclError()
             assert self._wantobjects
@@ -466,7 +466,7 @@ class TkApp(object):
         if isinstance(s, int):
             return bool(s)
         if isinstance(s, str):
-            s = str(s)
+            s = ToTCLString(s)
         if '\x00' in s:
             raise TypeError
         v = tkffi.new("int*")
@@ -479,7 +479,7 @@ class TkApp(object):
         if isinstance(s, int):
             return s
         if isinstance(s, str):
-            s = str(s)
+            s = ToTCLString(s)
         if '\x00' in s:
             raise TypeError
         if tklib.HAVE_LIBTOMMATH or tklib.HAVE_WIDE_INT_TYPE:
@@ -504,8 +504,8 @@ class TkApp(object):
         if isinstance(s, float):
             return s
         if isinstance(s, str):
-            s = str(s)
-        if '\x00' in s:
+            s = ToTCLString(s)
+        if b'\x00' in s:
             raise TypeError
         v = tkffi.new("double*")
         res = tklib.Tcl_GetDouble(self.interp, s, v)
@@ -517,7 +517,7 @@ class TkApp(object):
         if '\x00' in s:
             raise TypeError
         v = tkffi.new("int*")
-        res = tklib.Tcl_ExprBoolean(self.interp, s, v)
+        res = tklib.Tcl_ExprBoolean(self.interp, ToTCLString(s), v)
         if res == tklib.TCL_ERROR:
             self.raiseTclError()
         return v[0]
@@ -526,7 +526,7 @@ class TkApp(object):
         if '\x00' in s:
             raise TypeError
         v = tkffi.new("long*")
-        res = tklib.Tcl_ExprLong(self.interp, s, v)
+        res = tklib.Tcl_ExprLong(self.interp, ToTCLString(s), v)
         if res == tklib.TCL_ERROR:
             self.raiseTclError()
         return v[0]
@@ -535,7 +535,7 @@ class TkApp(object):
         if '\x00' in s:
             raise TypeError
         v = tkffi.new("double*")
-        res = tklib.Tcl_ExprDouble(self.interp, s, v)
+        res = tklib.Tcl_ExprDouble(self.interp, ToTCLString(s), v)
         if res == tklib.TCL_ERROR:
             self.raiseTclError()
         return v[0]
@@ -543,7 +543,7 @@ class TkApp(object):
     def exprstring(self, s):
         if '\x00' in s:
             raise TypeError
-        res = tklib.Tcl_ExprString(self.interp, s)
+        res = tklib.Tcl_ExprString(self.interp, ToTCLString(s))
         if res == tklib.TCL_ERROR:
             self.raiseTclError()
         return tkffi.string(tklib.Tcl_GetStringResult(self.interp))
