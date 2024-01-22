@@ -402,7 +402,7 @@ class TkApp(object):
         if res == tklib.TCL_ERROR:
             self.raiseTclError()
 
-        result = tuple(tkffi.string(argv[0][i])
+        result = tuple(FromTclString(tkffi.string(argv[0][i]))
                        for i in range(argc[0]))
         tklib.Tcl_Free(argv[0])
         return result
@@ -450,11 +450,12 @@ class TkApp(object):
             # Return the string itself.
             return arg
 
+        # TODO: Is this method called from Python and Python str is expected, or are TCL strings expected?
         try:
             if argc[0] == 0:
-                return b""
+                return ""
             elif argc[0] == 1:
-                return tkffi.string(argv[0][0])
+                return FromTclString(tkffi.string(argv[0][0]))
             else:
                 return tuple(self._split(argv[0][i])
                              for i in range(argc[0]))
