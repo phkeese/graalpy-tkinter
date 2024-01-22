@@ -26,7 +26,7 @@ class _DummyLock(object):
 def varname_converter(input):
     if isinstance(input, TclObject):
         return input.string
-    if '\0' in input:
+    if b'\0' in input:
         raise ValueError("NUL character in string")
     return ToTCLString(input)
 
@@ -467,7 +467,7 @@ class TkApp(object):
             return bool(s)
         if isinstance(s, str):
             s = ToTCLString(s)
-        if '\x00' in s:
+        if b'\x00' in s:
             raise TypeError
         v = tkffi.new("int*")
         res = tklib.Tcl_GetBoolean(self.interp, s, v)
@@ -480,7 +480,7 @@ class TkApp(object):
             return s
         if isinstance(s, str):
             s = ToTCLString(s)
-        if '\x00' in s:
+        if b'\x00' in s:
             raise TypeError
         if tklib.HAVE_LIBTOMMATH or tklib.HAVE_WIDE_INT_TYPE:
             value = tklib.Tcl_NewStringObj(s, -1)
@@ -514,7 +514,7 @@ class TkApp(object):
         return v[0]
 
     def exprboolean(self, s):
-        if '\x00' in s:
+        if b'\x00' in s:
             raise TypeError
         v = tkffi.new("int*")
         res = tklib.Tcl_ExprBoolean(self.interp, ToTCLString(s), v)
@@ -523,7 +523,7 @@ class TkApp(object):
         return v[0]
 
     def exprlong(self, s):
-        if '\x00' in s:
+        if b'\x00' in s:
             raise TypeError
         v = tkffi.new("long*")
         res = tklib.Tcl_ExprLong(self.interp, ToTCLString(s), v)
@@ -532,7 +532,7 @@ class TkApp(object):
         return v[0]
 
     def exprdouble(self, s):
-        if '\x00' in s:
+        if b'\x00' in s:
             raise TypeError
         v = tkffi.new("double*")
         res = tklib.Tcl_ExprDouble(self.interp, ToTCLString(s), v)
@@ -541,7 +541,7 @@ class TkApp(object):
         return v[0]
 
     def exprstring(self, s):
-        if '\x00' in s:
+        if b'\x00' in s:
             raise TypeError
         res = tklib.Tcl_ExprString(self.interp, ToTCLString(s))
         if res == tklib.TCL_ERROR:
