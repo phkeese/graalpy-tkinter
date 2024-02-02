@@ -37,12 +37,14 @@ def FromTclString(s: bytes) -> str:
         return s.decode("utf-8")
     except UnicodeDecodeError:
         # Tcl encodes null character as \xc0\x80
-        s.replace(b'\xc0\x80', b'\x00').decode('utf-8')
+        return s.replace(b'\xc0\x80', b'\x00')\
+                .decode('utf-8')
 
 # Encodes a Python str as UTF-8 (assuming TCL encodes its API strings as UTF-8 as well, not UTF-16).
 # TODO: Find out whether this is correct.
 def ToTCLString(s: str) -> bytes:
-    return s.encode("utf-8").replace(b"\x00", b"\xc0\x80")
+    return s.encode("utf-8")\
+            .replace(b"\x00", b"\xc0\x80")
 
 
 # Only when tklib.HAVE_WIDE_INT_TYPE.
