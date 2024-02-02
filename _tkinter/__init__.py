@@ -1,8 +1,8 @@
 # _tkinter package -- low-level interface to libtk and libtcl.
 #
-# This is an internal module, applications should "import Tkinter" instead.
+# This is an internal module, applications should "import tkinter" instead.
 #
-# This version is based on cffi, and is a translation of _tkinter.c
+# This version is based PyPy which itself is based on cffi, and is a translation of _tkinter.c
 # from CPython, version 2.7.4.
 
 import sys
