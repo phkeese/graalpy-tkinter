@@ -112,7 +112,7 @@ class TkApp(object):
         # "threaded" is an optionally present member of "tcl_platform" when TCL was compiled with threading.
         # Tcl_GetVar2Ex should NULL when "threaded" is not present, so casting to a bool here is doing an implicit NULL-check.
         self.threaded = bool(tklib.Tcl_GetVar2Ex(
-            self.interp, b"tcl_platform", b"threads",
+            self.interp, b"tcl_platform", b"threaded",
             tklib.TCL_GLOBAL_ONLY))
         self.thread_id = tklib.Tcl_GetCurrentThread()
         self.dispatching = False
