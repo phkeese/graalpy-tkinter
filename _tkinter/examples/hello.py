@@ -1,3 +1,5 @@
+# Running me from within this directory does not work, copy me to the directory _tkinter/ resides in.
+
 from tkinter import *
 from tkinter import ttk
 root = Tk()

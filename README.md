@@ -1,30 +1,48 @@
+# Tkinter for GraalPy
+
 ## Setup
 
+To use our module in GraalPy, the `cffi` module is required. It is recommended to install it inside of a virtual environment.
+If you have a development version of graalpy, you can use `mx` to execute it and setup a virtual environment:
 ```bash
-# Update submodules in this directory
-git submodule update --init
+mx build
+mx python -m venv path/to/venv
 ```
 
+After activating the environment, simply install `cffi`, build the bindings and you are ready to go:
 ```bash
-# Inside GraalPy root directory
-mx build
-mx python -m venv <path/to/venv>
-
-# Inside directory above venv
 source venv/bin/activate
 pip install cffi
 python _tkinter/tklib_build.py
-
-# To run code (using venv)
-python main.py
 ```
 
+Now, to use our `_tkinter` module, execute code from within the directory where `_tkinter/` resides:
 ```bash
-# build and run your own mini tcl/tk app in c
-cc -o c_tests/raw c_tests/raw_tcl.c -l tcl8.6 -L /usr/local/Cellar/tcl-tk/8.6.13_5/lib/ -ltk8.6
-./c_tests/raw 
+$ ls
+_tkinter/ app.py
+$ python app.py
 ```
+
+## Running Tests
+
+To test the implementation, you can use CPython's test suite.
+The setup is a bit brittle and you need to specify top-level directories and start directories to look for modules and test cases in:
+```bash
+python \
+    -m unittest discover \
+    -t path/to/cpython/Lib/ \
+    -s path/to/cpython/Lib/tkinter/test/test_tkinter/ \
+    -p test_file.py
+```
+
+As of right now, some tests cause a SegFault when using GraalPy, so filtering by filename is recommended.
+You can also use normal CPython if your debug-build of GraalPy is taking too long or cannot be debugged, but you will need to repeat the setup process for a new virtual environment.
 
 ## TODO
-- [ ] Remove hack in tkinter for str
-- [ ] Rewrite marshalling code
+
+There are some immediate TODOs to improve on the current state:
+
+- [ ] Use PyPy's 3.8 branch instead of the 2.7 branch as the base for our code. This will probably help with the Unicode errors.
+- [ ] Investigate why clicking a button causes a SegFault inside of GraalPy's `cffi` module.
+- [ ] Investigate how Python handles Tk on macOS, in particular how it avoids other thread accessing the main window (an exception is thrown for this by the OS)
+
